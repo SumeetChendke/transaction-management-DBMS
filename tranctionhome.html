@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Management System</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --secondary: #7e22ce;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #94a3b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            animation: fadeIn 0.8s ease forwards;
+        }
+        
+        .header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+        
+        .input-field:disabled {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            cursor: not-allowed;
+            border-color: #cbd5e1;
+        }
+        
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-create {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-create:hover:not(:disabled) {
+            background-color: #15803d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
+        }
+        
+        .btn-read {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-read:hover:not(:disabled) {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+        }
+        
+        .btn-update {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-update:hover:not(:disabled) {
+            background-color: #b45309;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(180, 83, 9, 0.3);
+        }
+        
+        .btn-delete {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-delete:hover:not(:disabled) {
+            background-color: #b91c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3);
+        }
+        
+        .result-section {
+            margin-top: 24px;
+            padding: 16px;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .result-section h3 {
+            color: var(--dark);
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        
+        .transactions-list {
+            list-style: none;
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.3s ease;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .transaction-item:hover {
+            background-color: #f0f9ff;
+        }
+        
+        .transaction-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .transaction-item.selected {
+            background-color: #e0f2fe;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .transaction-amount {
+            font-weight: 600;
+        }
+        
+        .positive {
+            color: var(--success);
+        }
+        
+        .negative {
+            color: var(--danger);
+        }
+        
+        .balance-display {
+            font-weight: 600;
+            color: var(--success);
+            text-align: center;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #f0fdf4;
+            border-radius: 6px;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+            z-index: 1000;
+        }
+        
+        .toast-success {
+            background-color: var(--success);
+        }
+        
+        .toast-error {
+            background-color: var(--danger);
+        }
+        
+        .toast-info {
+            background-color: var(--primary);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Transaction Manager</h1>
+            <p>Manage your financial transactions with ease</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-group">
+                <label for="amount">Amount (For Create/Update)</label>
+                <input type="number" id="amount" class="input-field" placeholder="Enter amount" step="0.01" min="0">
+            </div>
+            
+            <div class="input-group">
+                <label for="balance">Current Balance</label>
+                <input type="number" id="balance" class="input-field" placeholder="$0.00" step="0.01" min="0" disabled>
+                <div class="balance-display" id="balanceDisplay" style="display: none;">Total Balance: $0.00</div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="createBtn" class="btn btn-create">
+                    <span>Create</span>
+                </button>
+                <button id="readBtn" class="btn btn-read">
+                    <span>Read</span>
+                </button>
+                <button id="updateBtn" class="btn btn-update">
+                    <span>Update</span>
+                </button>
+                <button id="deleteBtn" class="btn btn-delete">
+                    <span>Delete</span>
+                </button>
+            </div>
+            
+            <div id="resultSection" class="result-section" style="display: none;">
+                <h3>Transactions</h3>
+                <ul id="transactionsList" class="transactions-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const amountInput = document.getElementById('amount');
+            const balanceInput = document.getElementById('balance');
+            const balanceDisplay = document.getElementById('balanceDisplay');
+            const createBtn = document.getElementById('createBtn');
+            const readBtn = document.getElementById('readBtn');
+            const updateBtn = document.getElementById('updateBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const resultSection = document.getElementById('resultSection');
+            const transactionsList = document.getElementById('transactionsList');
+            
+            // Store transactions in memory
+            let transactions = [];
+            let selectedTransactionId = null;
+            
+            // Calculate and update balance display
+            function updateBalanceDisplay() {
+                const totalBalance = transactions.reduce((sum, t) => sum + t.amount, 0);
+                balanceInput.value = totalBalance.toFixed(2);
+                balanceDisplay.textContent = `Total Balance: $${totalBalance.toFixed(2)}`;
+                balanceDisplay.style.display = 'block';
+            }
+            
+            // Show toast notification
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+            
+            // Create a new transaction
+            createBtn.addEventListener('click', function() {
+                const amount = parseFloat(amountInput.value);
+                
+                if (isNaN(amount) || amount <= 0) {
+                    showToast('Please enter a valid amount', 'error');
+                    return;
+                }
+                
+                // Deselect any selected transaction before creating
+                selectedTransactionId = null;
+                document.querySelectorAll('.transaction-item').forEach(item => item.classList.remove('selected'));
+                
+                const newTransaction = {
+                    id: Date.now(),
+                    amount: amount,
+                    date: new Date().toLocaleString()
+                };
+                
+                transactions.push(newTransaction);
+                showToast('Transaction created successfully!', 'success');
+                amountInput.value = '';
+                
+                // Show the result section if it's hidden
+                resultSection.style.display = 'block';
+                displayTransactions();
+                updateBalanceDisplay();
+            });
+            
+            // Read all transactions
+            readBtn.addEventListener('click', function() {
+                if (transactions.length === 0) {
+                    showToast('No transactions to display', 'info');
+                    resultSection.style.display = 'none';
+                    balanceDisplay.style.display = 'none';
+                    return;
+                }
+                
+                resultSection.style.display = 'block';
+                displayTransactions();
+                updateBalanceDisplay();
+                showToast('Transactions loaded', 'info');
+            });
+            
+            // Update a transaction (now uses amountInput for new value)
+            updateBtn.addEventListener('click', function() {
+                if (selectedTransactionId === null) {
+                    showToast('Please select a transaction to update', 'error');
+                    return;
+                }
+                
+                const updatedAmount = parseFloat(amountInput.value);
+                
+                if (isNaN(updatedAmount) || updatedAmount <= 0) {
+                    showToast('Please enter a valid amount for update', 'error');
+                    return;
+                }
+                
+                const transactionIndex = transactions.findIndex(t => t.id === selectedTransactionId);
+                
+                if (transactionIndex !== -1) {
+                    transactions[transactionIndex].amount = updatedAmount;
+                    transactions[transactionIndex].date = new Date().toLocaleString();
+                    
+                    showToast('Transaction updated successfully!', 'success');
+                    amountInput.value = '';
+                    selectedTransactionId = null;
+                    displayTransactions();
+                    updateBalanceDisplay();
+                }
+            });
+            
+            // Delete a transaction
+            deleteBtn.addEventListener('click', function() {
+                if (selectedTransactionId === null) {
+                    showToast('Please select a transaction to delete', 'error');
+                    return;
+                }
+                
+                transactions = transactions.filter(t => t.id !== selectedTransactionId);
+                showToast('Transaction deleted successfully!', 'success');
+                selectedTransactionId = null;
+                amountInput.value = '';
+                
+                if (transactions.length === 0) {
+                    resultSection.style.display = 'none';
+                    balanceDisplay.style.display = 'none';
+                } else {
+                    displayTransactions();
+                }
+                updateBalanceDisplay();
+            });
+            
+            // Display transactions in the list
+            function displayTransactions() {
+                transactionsList.innerHTML = '';
+                
+                transactions.forEach(transaction => {
+                    const listItem = document.createElement('li');
+                    listItem.className = `transaction-item ${transaction.id === selectedTransactionId ? 'selected' : ''}`;
+                    
+                    const amountSpan = document.createElement('span');
+                    amountSpan.className = `transaction-amount ${transaction.amount >= 0 ? 'positive' : 'negative'}`;
+                    amountSpan.textContent = `$${transaction.amount.toFixed(2)}`;
+                    
+                    const dateSpan = document.createElement('span');
+                    dateSpan.textContent = transaction.date;
+                    
+                    listItem.appendChild(amountSpan);
+                    listItem.appendChild(dateSpan);
+                    
+                    listItem.addEventListener('click', function() {
+                        // Deselect previous
+                        document.querySelectorAll('.transaction-item').forEach(item => item.classList.remove('selected'));
+                        // Select current
+                        this.classList.add('selected');
+                        selectedTransactionId = transaction.id;
+                        amountInput.value = transaction.amount;
+                        amountInput.focus();
+                    });
+                    
+                    transactionsList.appendChild(listItem);
+                });
+            }
+            
+            // Initialize balance display
+            updateBalanceDisplay();
+        });
+    </script>
+</body>
+</html>
